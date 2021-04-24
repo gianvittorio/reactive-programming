@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class FluxAndMonoGeneratorService {
@@ -68,7 +69,7 @@ public class FluxAndMonoGeneratorService {
     }
 
     public Mono<String> nameMonoMapFilterSwitchIfEmpty(int length) {
-        Function<? super Mono<String>, ? extends Mono<String>> operationChain =
+        UnaryOperator<Mono<String>> operationChain =
                 input -> input.filter(name -> name.length() > length)
                         .map(String::toUpperCase)
                         .map(
