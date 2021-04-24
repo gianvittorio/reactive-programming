@@ -3,6 +3,8 @@ package com.gianvittorio.reactor.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
@@ -185,6 +187,140 @@ public class FluxAndMonoGeneratorServiceTest {
         StepVerifier.create(generatorService.nameMonoFilterGreaterThan(length).log())
                 .expectSubscription()
                 .expectNext("alex")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must concatenate 2 flux.")
+    public void fluxConcatTest() {
+
+        Flux<String> concatFlux = generatorService.exploreConcat();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectNext("D", "E", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must concatenate 2 flux.")
+    public void fluxConcatWithTest() {
+
+        Flux<String> concatFlux = generatorService.exploreConcatWith();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectNext("D", "E", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must concatenate 2 mono.")
+    public void fluxConcatTestWithMono() {
+
+        Flux<String> concatFlux = generatorService.exploreConcatWithMono();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "B")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must merge 2 flux.")
+    public void fluxMergeTest() {
+
+        Flux<String> concatFlux = generatorService.exploreMerge();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "D", "B", "E", "C", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must merge 2 flux.")
+    public void fluxMergeWithTest() {
+
+        Flux<String> concatFlux = generatorService.exploreMergeWith();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "D", "B", "E", "C", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must merge 2 flux sequantially.")
+    public void fluxMergeSequentialTest() {
+
+        Flux<String> concatFlux = generatorService.exploreMergeSequential();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C", "D", "E", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must merge 2 monos.")
+    public void fluxMergeWithMonoTest() {
+
+        Flux<String> concatFlux = generatorService.exploreMergeWithMono();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNextCount(2)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must zip 2 flux.")
+    public void fluxZipTest() {
+
+        Flux<String> concatFlux = generatorService.exploreZip();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("AD", "BE", "CF")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must zip 2 flux.")
+    public void fluxZipWithTest() {
+
+        Flux<String> concatFlux = generatorService.exploreZipWith();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("AD", "BE", "CF")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must zip 2 monos.")
+    public void monoZipWithTest() {
+
+        Mono<String> concatFlux = generatorService.exploreZipWithMono();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("AB")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must zip 4 flux.")
+    public void fluxZip1Test() {
+
+        Flux<String> concatFlux = generatorService.exploreZip1();
+
+        StepVerifier.create(concatFlux.log())
+                .expectSubscription()
+                .expectNext("AD14", "BE25", "CF36")
                 .verifyComplete();
     }
 }
