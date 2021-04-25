@@ -1,4 +1,13 @@
 package com.gianvittorio.reactor.util;
 
-public class CommonUtil {
+import java.util.concurrent.TimeUnit;
+
+public interface CommonUtil {
+    static void delay(int i) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(i);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.gianvittorio.reactor.util.CommonUtil.delay;
+
 public class MovieInfoService {
 
     public Flux<MovieInfo> retrieveMoviesFlux() {
@@ -36,13 +38,5 @@ public class MovieInfoService {
         return List.of(
                 MovieInfo.builder().movieInfoId(100l).name("Batman Begins").year(2005).cast(List.of("Christian Bale", "Liam Neeson")).build()
         );
-    }
-
-    private static void delay(int i) {
-        try {
-            TimeUnit.MILLISECONDS.sleep(i);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
