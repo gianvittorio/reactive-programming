@@ -1,12 +1,10 @@
 package com.gianvittorio.reactor.service;
 
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -39,7 +37,11 @@ public class FluxAndMonoGeneratorService {
                         name -> String.valueOf(name.length())
                                 .concat(" - ")
                                 .concat(name)
-                );
+                )
+                .doOnSubscribe(System.out::println)
+                .doOnNext(name -> System.out.println("Name: " + name))
+                .doOnComplete(() -> System.out.println("Inside the complete callback"))
+                .doFinally(signalType -> System.out.println("Inside doFInally: " + signalType));
     }
 
     public Flux<String> namesFluxImmutable() {
