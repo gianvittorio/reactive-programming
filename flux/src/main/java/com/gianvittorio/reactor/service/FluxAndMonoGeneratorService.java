@@ -1,14 +1,19 @@
 package com.gianvittorio.reactor.service;
 
+import com.gianvittorio.reactor.exception.ReactorException;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Constructor;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class FluxAndMonoGeneratorService {
     public static void main(String[] args) {
         FluxAndMonoGeneratorService generatorService = new FluxAndMonoGeneratorService();
@@ -248,6 +253,105 @@ public class FluxAndMonoGeneratorService {
 
         return aMono.zipWith(bMono)
                 .map(t2 -> t2.getT1() + t2.getT2());
+    }
+
+    public Flux<String> exceptionFlux() {
+        return Flux.just("A", "B", "C")
+                .concatWith(Flux.error(new RuntimeException("Exception occurred")))
+                .concatWith(Flux.just("D"));
+    }
+
+    public Flux<String> exploreOnErrorReturn() {
+        return Flux.just("A", "B", "C")
+                .concatWith(Flux.error(new IllegalStateException("Exception occurred")))
+                .onErrorReturn("D");
+    }
+
+    public Flux<String> exploreOnErrorResume(Exception e) {
+
+        Flux<String> recoveryFlux = Flux.just("D", "E", "F");
+
+        return Flux.just("A", "B", "C")
+                .concatWith(Flux.error(e))
+                .onErrorResume(ex -> {
+                    log.error("Exception is: " + ex);
+
+                    if (ex instanceof IllegalStateException) {
+                        return recoveryFlux;
+                    }
+
+                    return Flux.error(ex);
+                });
+    }
+
+    public Flux<String> exploreOnErrorContinue(Exception e) {
+
+        Flux<String> recoveryFlux = Flux.just("D", "E", "F");
+
+        return Flux.just("A", "B", "C")
+                .map(name -> {
+                    if (name.equals("B")) {
+                        throw new IllegalStateException("Exception occurred");
+                    }
+
+                    return name;
+                })
+                .concatWith(Flux.just("D"))
+                .onErrorContinue((ex, value) -> {
+                    log.error("Exception is: " + ex);
+                    log.info("value is: " + value);
+                });
+    }
+
+    public Mono<String> exploreOnErrorContinueMono(String input) {
+
+        return Mono.just(input)
+                .map(name -> {
+                    if (name.equals("abc")) {
+                        throw new RuntimeException("Exception occurred");
+                    }
+                    return name;
+                })
+                .onErrorContinue((ex, name) -> {
+                    log.error("Exception: " + ex);
+                    log.info("name: " + name);
+                });
+    }
+
+    public Flux<String> exploreOnErrorMap() {
+
+        Flux<String> recoveryFlux = Flux.just("D", "E", "F");
+
+        return Flux.just("A", "B", "C")
+                .map(name -> {
+                    if (name.equals("B")) {
+                        throw new IllegalStateException("Exception occurred");
+                    }
+
+                    return name;
+                })
+                .concatWith(Flux.just("D"))
+                .onErrorMap(ex -> {
+                    log.error("Exception is: " + ex);
+
+                    return new ReactorException(ex.getMessage(), ex);
+                });
+    }
+
+    public Flux<String> exploreDoOnError() {
+        return Flux.just("A", "B", "C")
+                .concatWith(Flux.error(new IllegalStateException("Exception occurred")))
+                .doOnError(ex -> {
+                    log.error("Exception is: " + ex);
+                });
+    }
+
+    public Mono<Object> exploreDoOnErrorMono() {
+        return Mono.just("A")
+                .map(value -> {
+                    throw new RuntimeException("Exception occurred");
+                })
+                .onErrorReturn("ABC");
     }
 
     public interface Utils {

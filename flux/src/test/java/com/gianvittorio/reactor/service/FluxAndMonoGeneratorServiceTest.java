@@ -1,5 +1,7 @@
 package com.gianvittorio.reactor.service;
 
+import com.gianvittorio.reactor.exception.ReactorException;
+import lombok.var;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -322,5 +324,163 @@ public class FluxAndMonoGeneratorServiceTest {
                 .expectSubscription()
                 .expectNext("AD14", "BE25", "CF36")
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Return error, then cancel subscription.")
+    public void fluxExceptionTest() {
+        StepVerifier.create(generatorService.exceptionFlux().log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectError(RuntimeException.class)
+                .verify();
+
+    }
+
+    @Test
+    @DisplayName("Return error, then cancel subscription.")
+    public void fluxException1Test() {
+        StepVerifier.create(generatorService.exceptionFlux().log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectError()
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Return error, then cancel subscription.")
+    public void fluxException2Test() {
+        StepVerifier.create(generatorService.exceptionFlux().log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectErrorMessage("Exception occurred")
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorResumeTest() {
+        // Given
+        Exception exception = new IllegalStateException("Invalid state");
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorResume(exception);
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectNext("D", "E", "F")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorResume1Test() {
+        // Given
+        Exception exception = new RuntimeException("Invalid state");
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorResume(exception);
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectError(RuntimeException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorContinueTest() {
+        // Given
+        Exception exception = new IllegalStateException("Invalid state");
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorContinue(exception);
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A", "C", "D")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorMapTest() {
+        // Given
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorMap();
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A")
+                .expectError(ReactorException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorTest() {
+        // Given
+
+        // When
+        Flux<String> value = generatorService.exploreDoOnError();
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A", "B", "C")
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error mono.")
+    public void fluxOnErrorMonoTest() {
+        // Given
+
+        // When
+        var value = generatorService.exploreDoOnErrorMono();
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("ABC")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must return identity mono.")
+    public void fluxOnErrorContinueMonoWhenInputIsValidTest() {
+        // Given
+
+        // When
+        final String expectedName = "reactor";
+        Mono<String> value = generatorService.exploreOnErrorContinueMono(expectedName);
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext(expectedName)
+                .expectComplete();
+    }
+
+    @Test
+    @DisplayName("Must return error mono.")
+    public void fluxOnErrorContinueMonoWhenInputIsInvalidTest() {
+        // Given
+
+        // When
+        Mono<String> value = generatorService.exploreOnErrorContinueMono("abc");
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectComplete();
     }
 }
