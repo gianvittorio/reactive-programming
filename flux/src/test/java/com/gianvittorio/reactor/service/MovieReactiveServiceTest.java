@@ -14,6 +14,7 @@ public class MovieReactiveServiceTest {
 
     private MovieInfoService movieInfoService;
     private ReviewService reviewService;
+    private RevenueService revenueService;
 
     private MovieReactiveService movieReactiveService;
 
@@ -21,7 +22,8 @@ public class MovieReactiveServiceTest {
     public void setUp() {
         movieInfoService = new MovieInfoService();
         reviewService = new ReviewService();
-        movieReactiveService = new MovieReactiveService(movieInfoService, reviewService);
+        revenueService = new RevenueService();
+        movieReactiveService = new MovieReactiveService(movieInfoService, reviewService, revenueService);
     }
 
     @Test
@@ -75,6 +77,28 @@ public class MovieReactiveServiceTest {
                             .isEqualTo("Batman Begins");
                     assertThat(movie.getReviewList().size())
                             .isEqualTo(1);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must get moviw by id.")
+    public void getMovieByIdWithRevenue() {
+        // Given
+
+        // When
+        Mono<Movie> movieById = movieReactiveService.getMovieByIdWithRevenue(100l);
+
+        // Then
+        StepVerifier.create(movieById.log())
+                .expectSubscription()
+                .assertNext(movie -> {
+                    assertThat(movie.getMovieInfo().getName())
+                            .isEqualTo("Batman Begins");
+                    assertThat(movie.getReviewList().size())
+                            .isEqualTo(1);
+                    assertThat(movie.getRevenue())
+                            .isNotNull();
                 })
                 .verifyComplete();
     }

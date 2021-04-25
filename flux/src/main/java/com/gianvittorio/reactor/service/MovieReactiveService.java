@@ -2,6 +2,7 @@ package com.gianvittorio.reactor.service;
 
 import com.gianvittorio.reactor.domain.Movie;
 import com.gianvittorio.reactor.domain.MovieInfo;
+import com.gianvittorio.reactor.domain.Revenue;
 import com.gianvittorio.reactor.domain.Review;
 import com.gianvittorio.reactor.exception.MovieException;
 import com.gianvittorio.reactor.exception.NetworkException;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
@@ -23,9 +25,12 @@ public class MovieReactiveService {
 
     private final ReviewService reviewService;
 
-    public MovieReactiveService(MovieInfoService movieInfoService, ReviewService reviewService) {
+    private final RevenueService revenueService;
+
+    public MovieReactiveService(MovieInfoService movieInfoService, ReviewService reviewService, RevenueService revenueService) {
         this.movieInfoService = movieInfoService;
         this.reviewService = reviewService;
+        this.revenueService = revenueService;
     }
 
     public Flux<Movie> getAllMovies() {
@@ -149,6 +154,23 @@ public class MovieReactiveService {
                             .collectList();
 
                     return reviewsMono.map(reviews -> Movie.builder().reviewList(reviews).movieInfo(movieInfo).build());
+                });
+    }
+
+    public Mono<Movie> getMovieByIdWithRevenue(long movieId) {
+
+        return Mono.just(movieId)
+                .flatMap(movieInfoService::retrieveMovieInfoMonoUsingId)
+                .flatMap(movieInfo -> {
+                    Mono<List<Review>> reviewsMono = reviewService.retrieveReviewsFlux(movieInfo.getMovieInfoId())
+                            .collectList();
+
+                    Mono<Revenue> revenueMono = Mono.fromCallable(() -> revenueService.getRevenue(movieInfo.getMovieInfoId()))
+                            .subscribeOn(Schedulers.boundedElastic());
+
+                    return reviewsMono.zipWith(
+                            revenueMono,
+                            (reviews, revenue) -> Movie.builder().reviewList(reviews).movieInfo(movieInfo).revenue(revenue).build());
                 });
     }
 }
