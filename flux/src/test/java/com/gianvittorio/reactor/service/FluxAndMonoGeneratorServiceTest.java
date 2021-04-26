@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.test.scheduler.VirtualTimeScheduler;
@@ -430,6 +431,40 @@ public class FluxAndMonoGeneratorServiceTest {
 
         // When
         Flux<String> value = generatorService.exploreOnErrorMap();
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A")
+                .expectError(ReactorException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorMapOnOperatorDebugTest() {
+        // Given
+        //Hooks.onOperatorDebug();
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorMap();
+
+        // Then
+        StepVerifier.create(value.log())
+                .expectSubscription()
+                .expectNext("A")
+                .expectError(ReactorException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Must return error flux.")
+    public void fluxOnErrorMapReactorDebugAgentTest() {
+        // Given
+        //Hooks.onOperatorDebug();
+
+        // When
+        Flux<String> value = generatorService.exploreOnErrorMapReactorDebugAgent();
 
         // Then
         StepVerifier.create(value.log())

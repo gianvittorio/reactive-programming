@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
+import reactor.tools.agent.ReactorDebugAgent;
 
 import java.lang.reflect.Constructor;
 import java.time.Duration;
@@ -334,6 +335,31 @@ public class FluxAndMonoGeneratorService {
 
                     return name;
                 })
+                .checkpoint()
+                .concatWith(Flux.just("D"))
+                .onErrorMap(ex -> {
+                    log.error("Exception is: " + ex);
+
+                    return new ReactorException(ex.getMessage(), ex);
+                });
+    }
+
+    public Flux<String> exploreOnErrorMapReactorDebugAgent() {
+
+        ReactorDebugAgent.init();
+        ReactorDebugAgent.processExistingClasses();
+
+        Flux<String> recoveryFlux = Flux.just("D", "E", "F");
+
+        return Flux.just("A", "B", "C")
+                .map(name -> {
+                    if (name.equals("B")) {
+                        throw new IllegalStateException("Exception occurred");
+                    }
+
+                    return name;
+                })
+                .checkpoint()
                 .concatWith(Flux.just("D"))
                 .onErrorMap(ex -> {
                     log.error("Exception is: " + ex);
