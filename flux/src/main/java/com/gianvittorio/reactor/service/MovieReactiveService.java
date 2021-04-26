@@ -25,7 +25,7 @@ public class MovieReactiveService {
 
     private final ReviewService reviewService;
 
-    private final RevenueService revenueService;
+    private RevenueService revenueService = null;
 
     public MovieReactiveService(MovieInfoService movieInfoService, ReviewService reviewService, RevenueService revenueService) {
         this.movieInfoService = movieInfoService;
@@ -33,11 +33,32 @@ public class MovieReactiveService {
         this.revenueService = revenueService;
     }
 
+    public MovieReactiveService(MovieInfoService movieInfoService, ReviewService reviewService) {
+        this.movieInfoService = movieInfoService;
+        this.reviewService = reviewService;
+    }
+
     public Flux<Movie> getAllMovies() {
         Flux<MovieInfo> movieInfoFlux = movieInfoService.retrieveMoviesFlux();
 
         return movieInfoFlux.flatMap(movieInfo -> {
             Mono<List<Review>> reviewsMono = reviewService.retrieveReviewsFlux(movieInfo.getMovieInfoId())
+                    .collectList();
+
+            return reviewsMono.map(reviewsList -> Movie.builder().reviewList(reviewsList).movieInfo(movieInfo).build());
+        })
+                .onErrorMap(ex -> {
+                    log.error("Exception is: " + ex);
+
+                    throw new MovieException(ex.getMessage());
+                });
+    }
+
+    public Flux<Movie> getAllMoviesRestClient() {
+        Flux<MovieInfo> movieInfoFlux = movieInfoService.retrieveAllMovieInfoRestClient();
+
+        return movieInfoFlux.flatMap(movieInfo -> {
+            Mono<List<Review>> reviewsMono = reviewService.retrieveReviewsFluxRestClient(movieInfo.getMovieInfoId())
                     .collectList();
 
             return reviewsMono.map(reviewsList -> Movie.builder().reviewList(reviewsList).movieInfo(movieInfo).build());
@@ -151,6 +172,18 @@ public class MovieReactiveService {
                 .flatMap(movieInfoService::retrieveMovieInfoMonoUsingId)
                 .flatMap(movieInfo -> {
                     Mono<List<Review>> reviewsMono = reviewService.retrieveReviewsFlux(movieInfo.getMovieInfoId())
+                            .collectList();
+
+                    return reviewsMono.map(reviews -> Movie.builder().reviewList(reviews).movieInfo(movieInfo).build());
+                });
+    }
+
+    public Mono<Movie> getMovieByIdRestClient(long movieId) {
+
+        return Mono.just(movieId)
+                .flatMap(movieInfoService::retrieveAllMovieInfoByIdRestClient)
+                .flatMap(movieInfo -> {
+                    Mono<List<Review>> reviewsMono = reviewService.retrieveReviewsFluxRestClient(movieInfo.getMovieInfoId())
                             .collectList();
 
                     return reviewsMono.map(reviews -> Movie.builder().reviewList(reviews).movieInfo(movieInfo).build());

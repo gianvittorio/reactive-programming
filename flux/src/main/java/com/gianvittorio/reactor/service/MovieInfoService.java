@@ -1,15 +1,41 @@
 package com.gianvittorio.reactor.service;
 
 import com.gianvittorio.reactor.domain.MovieInfo;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.gianvittorio.reactor.util.CommonUtil.delay;
 
 public class MovieInfoService {
+
+    private WebClient webClient = null;
+
+    public MovieInfoService(WebClient webClient) {
+        this.webClient = webClient;
+    }
+
+    public MovieInfoService() {
+    }
+
+    public Flux<MovieInfo> retrieveAllMovieInfoRestClient() {
+        return webClient.get()
+                .uri("/v1/movie_infos")
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToFlux(MovieInfo.class);
+    }
+
+    public Mono<MovieInfo> retrieveAllMovieInfoByIdRestClient(long movieId) {
+        return webClient.get()
+                .uri("/v1/movie_infos/{id}", movieId)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(MovieInfo.class);
+    }
 
     public Flux<MovieInfo> retrieveMoviesFlux() {
         List<MovieInfo> movieInfoList = List.of(
