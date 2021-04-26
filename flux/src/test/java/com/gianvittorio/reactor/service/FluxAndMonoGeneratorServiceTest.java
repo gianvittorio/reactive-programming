@@ -499,4 +499,60 @@ public class FluxAndMonoGeneratorServiceTest {
                 .expectSubscription()
                 .expectComplete();
     }
+
+    @Test
+    @DisplayName("Must generate [1,10] and multiply each item by 2.")
+    public void exploreGenerateTest() {
+        // Given
+
+        // When
+        Flux<Integer> integerFlux = generatorService.exploreGenerate();
+
+        // Then
+        StepVerifier.create(integerFlux.log())
+                .expectNextCount(10)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must create sequence as by wrapped up factory method.")
+    public void exploreCreateTest() {
+        // Given
+
+        // When
+        Flux<String> flux = generatorService.exploreCreate();
+
+        // Then
+        StepVerifier.create(flux.log())
+                .expectNextCount(3)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must create single item.")
+    public void exploreCreateMonoTest() {
+        // Given
+
+        // When
+        Mono<String> mono = generatorService.exploreCreateMono();
+
+        // Then
+        StepVerifier.create(mono.log())
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must handle sequence as by wrapped up factory method.")
+    public void exploreHandleTest() {
+        // Given
+
+        // When
+        Flux<String> flux = generatorService.exploreHandle();
+
+        // Then
+        StepVerifier.create(flux.log())
+                .expectNextCount(2)
+                .verifyComplete();
+    }
 }

@@ -3,15 +3,19 @@ package com.gianvittorio.reactor.service;
 import com.gianvittorio.reactor.exception.ReactorException;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Constructor;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+
+import static com.gianvittorio.reactor.util.CommonUtil.delay;
 
 @Slf4j
 public class FluxAndMonoGeneratorService {
@@ -354,7 +358,55 @@ public class FluxAndMonoGeneratorService {
                 .onErrorReturn("ABC");
     }
 
+    public Flux<Integer> exploreGenerate() {
+        return Flux.generate(
+                () -> 1,
+                (state, sink) -> {
+                    sink.next(state * 2);
+
+                    if (state == 10) {
+                        sink.complete();
+                    }
+
+                    return state + 1;
+                }
+        );
+    }
+
+    public Flux<String> exploreCreate() {
+        return Flux.create(this::sendEvents);
+    }
+
+    public Mono<String> exploreCreateMono() {
+        return Mono.create(sink -> {
+            sink.success("alex");
+        });
+    }
+
+    public void sendEvents(FluxSink<String> sink) {
+        CompletableFuture.supplyAsync(Utils::names)
+                .thenAccept(names -> {
+                    names.forEach(sink::next);
+                })
+                .thenRun(sink::complete);
+    }
+
+    public Flux<String> exploreHandle() {
+        return Flux.fromIterable(List.of("alex", "ben", "chloe"))
+                .handle((name, sink) -> {
+                    if (name.length() > 3) {
+                        sink.next(name.toUpperCase());
+                    }
+                });
+    }
+
     public interface Utils {
+        static List<String> names() {
+            delay(1_000);
+
+            return List.of("alex", "ben", "chloe");
+        }
+
         static Flux<String> splitString(String s) {
             return Flux.fromStream(
                     s.chars()
