@@ -25,7 +25,7 @@ public class FluxAndMonoSchedulerService {
         Flux<String> namesFlux1 = Flux.fromIterable(nameslist1)
                 .publishOn(Schedulers.parallel())
                 .map(this::uppercase);
-        
+
         return namesFlux.mergeWith(namesFlux1);
     }
 
