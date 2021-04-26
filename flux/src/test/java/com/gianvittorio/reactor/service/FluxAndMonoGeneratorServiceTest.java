@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.test.scheduler.VirtualTimeScheduler;
 
+import java.time.Duration;
 import java.util.List;
 
 public class FluxAndMonoGeneratorServiceTest {
@@ -111,6 +113,20 @@ public class FluxAndMonoGeneratorServiceTest {
 
         StepVerifier.create(generatorService.namesFluxConcatMap(length).log())
                 .expectSubscription()
+                .expectNext("A", "L", "E", "X")
+                .expectNext("C", "H", "L", "O", "E")
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Must return transformed flux.")
+    public void namesFluxConcatMapVirtualTimerTest() {
+        final int length = 3;
+
+        VirtualTimeScheduler.getOrSet();
+
+        StepVerifier.withVirtualTime(() -> generatorService.namesFluxConcatMap(length).log())
+                .thenAwait(Duration.ofSeconds(10))
                 .expectNext("A", "L", "E", "X")
                 .expectNext("C", "H", "L", "O", "E")
                 .verifyComplete();
